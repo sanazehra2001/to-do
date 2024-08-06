@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 from .models import Task, Category
-from toDoApp.serializers import TaskSerializer, CategorySerializer
+from .serializers.category_serializer import CategorySerializer
+from .serializers.task_serializer import TaskSerializer
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()

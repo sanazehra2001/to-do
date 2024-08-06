@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import Task, Category
+from toDoApp.models import Task
 from datetime import datetime
+from toDoApp.serializers.category_serializer import CategorySerializer
 
 class TaskSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
