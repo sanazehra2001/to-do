@@ -20,7 +20,6 @@ class Task(models.Model):
     is_completed = models.BooleanField(default=False)
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
     category = models.ForeignKey(Category, related_name='tasks', on_delete=models.PROTECT)
-    user = models.ForeignKey(User, related_name='tasks', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title

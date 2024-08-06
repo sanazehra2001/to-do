@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from toDoApp.models import Task
+from toDoApp.models import Task, Category
 from datetime import datetime
 from toDoApp.serializers.category_serializer import CategorySerializer
 
 class TaskSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
 
     class Meta:
         model = Task
@@ -35,14 +35,3 @@ class TaskSerializer(serializers.ModelSerializer):
         if value not in ['low', 'medium', 'high']:
             raise serializers.ValidationError("Priority must be 'low', 'medium', or 'high'.")
         return value
-
-    def validate_category(self, data):
-        """
-        Validate that the category exists and is valid.
-        """
-        category_data = data.get('category')
-        if category_data:
-            category_name = category_data.get('name')
-            if not Category.objects.filter(name=category_name).exists():
-                raise serializers.ValidationError("Category does not exist.")
-        return data
