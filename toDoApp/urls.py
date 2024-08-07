@@ -6,3 +6,4 @@ router.register(r'tasks', TaskViewSet)
 router.register(r'categories', CategoryViewSet)
 
 urlpatterns = router.urls
+

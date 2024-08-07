@@ -8,6 +8,8 @@ from .models import Task, Category
 from .serializers.category_serializer import CategorySerializer
 from .serializers.task_serializer import TaskSerializer
 
+
+
 class BaseAPIView(APIView):
    
     def success_response(self, data=None, message="Success", status_code=status.HTTP_200_OK):
