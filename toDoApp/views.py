@@ -1,10 +1,11 @@
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import viewsets
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from .models import Task, Category
+from .models import Task, Category, CustomUser
 from .serializers.category_serializer import CategorySerializer
 from .serializers.task_serializer import TaskSerializer
 
@@ -38,7 +39,9 @@ class BaseAPIView(APIView):
 class TaskViewSet(BaseAPIView, viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated]
+
+    # authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -75,6 +78,8 @@ class TaskViewSet(BaseAPIView, viewsets.ModelViewSet):
 class CategoryViewSet(BaseAPIView, viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+    permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
         try:
