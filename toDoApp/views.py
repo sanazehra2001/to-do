@@ -41,7 +41,7 @@ class TaskViewSet(BaseAPIView, viewsets.ModelViewSet):
     serializer_class = TaskSerializer
 
     # authentication_classes = [JWTAuthentication]
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
