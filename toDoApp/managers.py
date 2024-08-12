@@ -1,5 +1,5 @@
 from django.contrib.auth.base_user import BaseUserManager
-# from toDoApp.models import CustomUser
+from django.contrib.auth.models import Permission
 from django.apps import apps
 
 class CustomUserManager(BaseUserManager):
@@ -19,8 +19,15 @@ class CustomUserManager(BaseUserManager):
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save()
-        print(f"User {email} created successfully")
         return user
+    
+    def _assign_permissions(self, user, permission_codenames):
+        for codename in permission_codenames:
+            try:
+                permission = Permission.objects.get(codename=codename)
+                user.user_permissions.add(permission)
+            except Permission.DoesNotExist:
+                pass
 
     def create_superuser(self, email, password, **extra_fields):
         """

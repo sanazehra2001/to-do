@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group, Permission
 from django.utils import timezone
 from .managers import CustomUserManager, EmployeeManager, EmployerManager
-# from django.contrib.auth.base_user import BaseUserManager
 from django.conf import settings
 import uuid
 
@@ -68,7 +67,6 @@ class Employee(CustomUser):
 
     class Meta:
         proxy = True
-
 
 
 class Category(models.Model):
