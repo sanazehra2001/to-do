@@ -7,4 +7,4 @@ class TodoappConfig(AppConfig):
 
     def ready(self):
         import toDoApp.signals
-        print("TodoappConfig is ready")
+        

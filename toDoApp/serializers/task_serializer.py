@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from toDoApp.models import Task, Category
-from datetime import datetime
+from django.utils import timezone
 from toDoApp.serializers.category_serializer import CategorySerializer
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -30,7 +30,7 @@ class TaskSerializer(serializers.ModelSerializer):
         """
         Validate that the due date is not in the past.
         """
-        if value and value < datetime.now():
+        if value and value < timezone.now():
             raise serializers.ValidationError("Due date cannot be in the past.")
         return value
 
