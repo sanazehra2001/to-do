@@ -1,21 +1,20 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group, Permission
 from django.utils import timezone
-from .managers import CustomUserManager, EmployerManager, EmployeeManager
+from .managers import CustomUserManager, EmployeeManager, EmployerManager
+# from django.contrib.auth.base_user import BaseUserManager
 from django.conf import settings
 import uuid
 
-class CustomUser(AbstractBaseUser):
+class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     class Role(models.TextChoices):
         ADMIN = "ADMIN", 'Admin'
         EMPLOYER = "EMPLOYER", 'Employer'
         EMPLOYEE = "EMPLOYEE", 'Employee'
 
-    base_role = Role.ADMIN
-
     id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
-    role = models.CharField(max_length=20, choices=Role.choices, default=base_role)
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.ADMIN)
     email = models.EmailField(
         unique=True, 
         error_messages={'unique': "A user with that email already exists."}
@@ -46,8 +45,15 @@ class CustomUser(AbstractBaseUser):
 
     objects = CustomUserManager()
 
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.role = self.base_role
+        return super().save(*args, **kwargs)
+
     def __str__(self):
         return self.email
+
+
 
 class Employer(CustomUser):
     base_role = CustomUser.Role.EMPLOYER
@@ -62,6 +68,8 @@ class Employee(CustomUser):
 
     class Meta:
         proxy = True
+
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100)

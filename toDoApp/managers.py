@@ -1,6 +1,6 @@
 from django.contrib.auth.base_user import BaseUserManager
-from django.utils.translation import gettext_lazy as _
-
+# from toDoApp.models import CustomUser
+from django.apps import apps
 
 class CustomUserManager(BaseUserManager):
     """
@@ -12,16 +12,14 @@ class CustomUserManager(BaseUserManager):
         Create and save a user with the given email and password.
         """
 
-        if not self.pk:
-            self.role = self.base_role
-
         if not email:
-            raise ValueError(_("The email must be set"))
+            raise ValueError("The email must be set")
 
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save()
+        print(f"User {email} created successfully")
         return user
 
     def create_superuser(self, email, password, **extra_fields):
@@ -33,17 +31,32 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("is_active", True)
 
         if extra_fields.get("is_staff") is not True:
-            raise ValueError(_("Superuser must have is_staff=True."))
+            raise ValueError("Superuser must have is_staff=True.")
         if extra_fields.get("is_superuser") is not True:
-            raise ValueError(_("Superuser must have is_superuser=True."))
+            raise ValueError("Superuser must have is_superuser=True.")
         return self.create_user(email, password, **extra_fields)
 
-class EmployerManager(BaseUserManager):
-    def get_queryset(self, *args, **kwargs):
-        results = super().get_queryset(*args, **kwargs)
-        return results.filter(role=User.Role.Employer)
 
-class EmployeeManager(BaseUserManager):
+class EmployerManager(CustomUserManager):
+
+    def create_user(self, email, password=None, **extra_fields):
+        CustomUser = apps.get_model('toDoApp', 'CustomUser')
+        extra_fields.setdefault('role', CustomUser.Role.EMPLOYER)
+        return super().create_user(email, password, **extra_fields)
+
     def get_queryset(self, *args, **kwargs):
+        CustomUser = apps.get_model('toDoApp', 'CustomUser')
         results = super().get_queryset(*args, **kwargs)
-        return results.filter(role=User.Role.Employee)
+        return results.filter(role=CustomUser.Role.EMPLOYER)
+
+class EmployeeManager(CustomUserManager):
+
+    def create_user(self, email, password=None, **extra_fields):
+        CustomUser = apps.get_model('toDoApp', 'CustomUser')
+        extra_fields.setdefault('role', CustomUser.Role.EMPLOYEE)
+        return super().create_user(email, password, **extra_fields)
+
+    def get_queryset(self, *args, **kwargs):
+        CustomUser = apps.get_model('toDoApp', 'CustomUser')
+        results = super().get_queryset(*args, **kwargs)
+        return results.filter(role=CustomUser.Role.EMPLOYEE)
