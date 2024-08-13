@@ -2,6 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
+from drf_spectacular.utils import extend_schema
+
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -40,6 +42,7 @@ class TaskList(BaseAPIView):
     serializer_class = TaskSerializer   
     queryset = Task.objects.all()  
 
+    @extend_schema(operation_id="get_all_tasks")
     def get(self, request, *args, **kwargs):
         try:
             tasks = Task.objects.all()
@@ -48,6 +51,7 @@ class TaskList(BaseAPIView):
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to retrieve tasks.")
 
+    @extend_schema(operation_id="create_task")
     def post(self, request, *args, **kwargs):
         try:
             serializer = TaskSerializer(data=request.data)
@@ -65,6 +69,7 @@ class TaskDetail(BaseAPIView):
     serializer_class = TaskSerializer   
     queryset = Task.objects.all()  
 
+    @extend_schema(operation_id="retrieve_task")
     def get(self, request, pk, *args, **kwargs):
         """
         Handle GET requests for retrieving a single task.
@@ -79,6 +84,7 @@ class TaskDetail(BaseAPIView):
             return self.bad_request_response(errors=str(e), message="Failed to retrieve task.")
         
 
+    @extend_schema(operation_id="update_task")
     def put(self, request, pk, *args, **kwargs):
         try:
             task = self.queryset.get(pk=pk)
@@ -90,7 +96,7 @@ class TaskDetail(BaseAPIView):
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to update task.")
         
-        
+    @extend_schema(operation_id="update_task_partial")
     def patch(self, request, pk, *args, **kwargs):
         """
         Handle PATCH requests for partially updating an existing task.
@@ -107,6 +113,7 @@ class TaskDetail(BaseAPIView):
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to update task.")
 
+    @extend_schema(operation_id="delete_task")
     def delete(self, request, pk, *args, **kwargs):
         try:
             task = self.queryset.get(pk=pk)
@@ -114,8 +121,6 @@ class TaskDetail(BaseAPIView):
             return self.success_response(message="Task deleted successfully.")
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to delete task.")
-
-
 
 
 
@@ -128,6 +133,7 @@ class CategoryList(BaseAPIView):
     serializer_class = CategorySerializer   
     queryset = Category.objects.all()  
 
+    @extend_schema(operation_id="get_all_categories")
     def get(self, request, *args, **kwargs):
         """
         Handle GET requests for listing categories.
@@ -139,6 +145,7 @@ class CategoryList(BaseAPIView):
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to retrieve categories.")
 
+    @extend_schema(operation_id="create_category")
     def post(self, request, *args, **kwargs):
         """
         Handle POST requests for creating a new category.
@@ -164,6 +171,7 @@ class CategoryDetail(BaseAPIView):
     serializer_class = CategorySerializer     
     queryset = Category.objects.all()  
 
+    @extend_schema(operation_id="retrieve_category")
     def get(self, request, pk, *args, **kwargs):
         """
         Handle GET requests for retrieving a single category.
@@ -177,6 +185,7 @@ class CategoryDetail(BaseAPIView):
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to retrieve category.")
 
+    @extend_schema(operation_id="update_category")
     def put(self, request, pk, *args, **kwargs):
         """
         Handle PUT requests for updating an existing category.
@@ -192,7 +201,8 @@ class CategoryDetail(BaseAPIView):
             return self.bad_request_response(message="Category not found.", status_code=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to update category.")
-        
+
+    @extend_schema(operation_id="update_category_partial") 
     def patch(self, request, pk, *args, **kwargs):
         """
         Handle PATCH requests for partially updating an existing category.
@@ -209,6 +219,8 @@ class CategoryDetail(BaseAPIView):
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to update category.")
         
+
+    @extend_schema(operation_id="delete_category")
     def delete(self, request, pk, *args, **kwargs):
         """
         Handle DELETE requests for deleting a category.
