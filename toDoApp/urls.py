@@ -1,9 +1,10 @@
-from rest_framework.routers import DefaultRouter
-from .views import TaskViewSet, CategoryViewSet
+from django.urls import path
+from .views import CategoryDetail, CategoryList, TaskDetail, TaskList
 
-router = DefaultRouter()
-router.register(r'tasks', TaskViewSet)
-router.register(r'categories', CategoryViewSet)
+urlpatterns = [
+    path('categories/', CategoryList.as_view(), name='category-list-create'),  # For GET and POST
+    path('categories/<int:pk>/', CategoryDetail.as_view(), name='category-retrieve-update-delete'),  # For GET, PUT, PATCH, DELETE
 
-urlpatterns = router.urls
-
+    path('tasks/', TaskList.as_view(), name='task-list-create'),  # For GET and POST
+    path('tasks/<int:pk>/', TaskDetail.as_view(), name='task-retrieve-update-delete'),  # For GET, PUT, PATCH, DELETE
+]
