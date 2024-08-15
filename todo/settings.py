@@ -15,7 +15,7 @@ from pathlib import Path
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
-# Load environment variables from .env file
+
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -150,6 +150,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
 }
 
 SIMPLE_JWT = {
@@ -161,6 +163,9 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
+    'TITLE': 'To Do App', 
+    'VERSION': '1.0.0',
+    'SCHEMA_PATH_PREFIX': '/api/v1/',
     'AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
