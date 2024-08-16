@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from .models import CustomUser, Category, Task
+from django.contrib.auth.models import Permission
 
 
 class CustomUserAdmin(UserAdmin):
@@ -28,3 +29,4 @@ class CustomUserAdmin(UserAdmin):
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Category)
 admin.site.register(Task)
+admin.site.register(Permission)

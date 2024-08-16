@@ -45,7 +45,7 @@ class TaskList(BaseAPIView):
     @extend_schema(operation_id="get_all_tasks")
     def get(self, request, *args, **kwargs):
         try:
-            tasks = Task.objects.all()
+            tasks = self.queryset.all()
             serializer = TaskSerializer(tasks, many=True)
             return self.success_response(data=serializer.data, message="Tasks retrieved successfully.")
         except Exception as e:
@@ -54,7 +54,7 @@ class TaskList(BaseAPIView):
     @extend_schema(operation_id="create_task")
     def post(self, request, *args, **kwargs):
         try:
-            serializer = TaskSerializer(data=request.data)
+            serializer = TaskSerializer(data=request.data, context = {'request':request})
             if serializer.is_valid():
                 serializer.save(user=request.user)
                 return self.success_response(data=serializer.data, message="Task created successfully.")
@@ -93,6 +93,8 @@ class TaskDetail(BaseAPIView):
                 serializer.save()
                 return self.success_response(data=serializer.data, message="Task updated successfully.")
             return self.bad_request_response(errors=serializer.errors, message="Failed to update task.")
+        except Task.DoesNotExist:
+            return self.bad_request_response(message="Task not found.", status_code=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to update task.")
         
@@ -119,6 +121,8 @@ class TaskDetail(BaseAPIView):
             task = self.queryset.get(pk=pk)
             task.delete()
             return self.success_response(message="Task deleted successfully.")
+        except Task.DoesNotExist:
+            return self.bad_request_response(message="Task not found.", status_code=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to delete task.")
 
@@ -139,7 +143,7 @@ class CategoryList(BaseAPIView):
         Handle GET requests for listing categories.
         """
         try:
-            categories = self.queryset
+            categories = self.queryset.all()
             serializer = self.serializer_class(categories, many=True)
             return self.success_response(data=serializer.data, message="Categories retrieved successfully.")
         except Exception as e:
