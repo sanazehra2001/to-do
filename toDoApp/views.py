@@ -1,13 +1,13 @@
-from xmlrpc.client import DateTime
-from rest_framework.views import APIView
-from rest_framework.generics import GenericAPIView
-from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.generics import GenericAPIView
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import DjangoModelPermissions
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 
-from rest_framework.permissions import DjangoModelPermissions
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from django_filters.rest_framework import DjangoFilterBackend
 
 from toDoApp.filters import CategoryFilter, TaskFilter
 
@@ -15,7 +15,7 @@ from .models import Task, Category
 from .serializers.category_serializer import CategorySerializer
 from .serializers.task_serializer import TaskSerializer
 
-from django_filters.rest_framework import DjangoFilterBackend
+
 
 class BaseAPIView(GenericAPIView):
    
@@ -46,8 +46,11 @@ class TaskList(BaseAPIView):
 
     authentication_classes = [JWTAuthentication]
     permission_classes = [DjangoModelPermissions]
+
     filter_backends = [DjangoFilterBackend]
     filterset_class = TaskFilter
+
+    pagination_class = PageNumberPagination 
 
     serializer_class = TaskSerializer   
     queryset = Task.objects.all()  
@@ -62,13 +65,15 @@ class TaskList(BaseAPIView):
             OpenApiParameter(name='is_completed', description='Status', required=False, type=OpenApiTypes.BOOL),
             OpenApiParameter(name='priority', description='Priority', required=False, type=OpenApiTypes.STR, enum=[choice[0] for choice in Task.PRIORITY_CHOICES]),
             OpenApiParameter(name='category', description='Category', required=False, type=OpenApiTypes.STR),
+            OpenApiParameter(name='page', description='Page Number', required=False, type=OpenApiTypes.INT),
         ]
             )
     def get(self, request, *args, **kwargs):
         try:
             tasks = self.filter_queryset(self.queryset)
-            serializer = TaskSerializer(tasks, many=True)
-            return self.success_response(data=serializer.data, message="Tasks retrieved successfully.")
+            page_tasks = self.paginate_queryset(tasks)
+            serializer = TaskSerializer(page_tasks, many=True)
+            return self.success_response(data=self.get_paginated_response(serializer.data).data, message="Tasks retrieved successfully.")
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to retrieve tasks.")
 
@@ -158,12 +163,15 @@ class CategoryList(BaseAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = CategoryFilter
 
+    pagination_class = PageNumberPagination 
+
     serializer_class = CategorySerializer   
     queryset = Category.objects.all()  
 
     @extend_schema(operation_id="get_all_categories", 
         parameters=[
             OpenApiParameter(name='name', description='Category Name', required=False, type=str),
+            OpenApiParameter(name='page', description='Page Number', required=False, type=OpenApiTypes.INT),
         ]
     )
     def get(self, request, *args, **kwargs):
@@ -172,8 +180,9 @@ class CategoryList(BaseAPIView):
         """
         try:
             categories = self.filter_queryset(self.queryset)
-            serializer = self.serializer_class(categories, many=True)
-            return self.success_response(data=serializer.data, message="Categories retrieved successfully.")
+            page_categories = self.paginate_queryset(categories)
+            serializer = self.serializer_class(page_categories, many=True)
+            return self.success_response(data=self.get_paginated_response(serializer.data).data, message="Categories retrieved successfully.")
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to retrieve categories.")
 
