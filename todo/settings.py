@@ -165,6 +165,14 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME_LATE_USER': timedelta(days=30),
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-todo',
+    }
+}
+
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'To Do App', 
     'VERSION': '1.0.0',
