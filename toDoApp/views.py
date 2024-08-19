@@ -1,17 +1,23 @@
+from xmlrpc.client import DateTime
 from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework_simplejwt.authentication import JWTAuthentication
+
+from toDoApp.filters import CategoryFilter, TaskFilter
 
 from .models import Task, Category
 from .serializers.category_serializer import CategorySerializer
 from .serializers.task_serializer import TaskSerializer
 
-class BaseAPIView(APIView):
+from django_filters.rest_framework import DjangoFilterBackend
+
+class BaseAPIView(GenericAPIView):
    
     def success_response(self, data=None, message="Success", status_code=status.HTTP_200_OK):
         """
@@ -37,15 +43,30 @@ class BaseAPIView(APIView):
 
 
 class TaskList(BaseAPIView):
+
     authentication_classes = [JWTAuthentication]
     permission_classes = [DjangoModelPermissions]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TaskFilter
+
     serializer_class = TaskSerializer   
     queryset = Task.objects.all()  
 
-    @extend_schema(operation_id="get_all_tasks")
+    @extend_schema(
+            operation_id="get_all_tasks",
+            parameters=[
+            OpenApiParameter(name='title', description='Title of the Task', required=False, type=str),
+            OpenApiParameter(name='description', description='Task Description', required=False, type=OpenApiTypes.STR),
+            OpenApiParameter(name='due_date_gt', description='Due Date Greater Than', required=False, type=OpenApiTypes.DATE),
+            OpenApiParameter(name='due_date_lt', description='Due Date Less Than', required=False, type=OpenApiTypes.DATE),
+            OpenApiParameter(name='is_completed', description='Status', required=False, type=OpenApiTypes.BOOL),
+            OpenApiParameter(name='priority', description='Priority', required=False, type=OpenApiTypes.STR, enum=[choice[0] for choice in Task.PRIORITY_CHOICES]),
+            OpenApiParameter(name='category', description='Category', required=False, type=OpenApiTypes.STR),
+        ]
+            )
     def get(self, request, *args, **kwargs):
         try:
-            tasks = self.queryset.all()
+            tasks = self.filter_queryset(self.queryset)
             serializer = TaskSerializer(tasks, many=True)
             return self.success_response(data=serializer.data, message="Tasks retrieved successfully.")
         except Exception as e:
@@ -66,6 +87,7 @@ class TaskList(BaseAPIView):
 class TaskDetail(BaseAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [DjangoModelPermissions]
+    
     serializer_class = TaskSerializer   
     queryset = Task.objects.all()  
 
@@ -129,21 +151,27 @@ class TaskDetail(BaseAPIView):
 
 
 class CategoryList(BaseAPIView):
-    """
-    List all snippets, or create a new snippet.
-    """
+
     authentication_classes = [JWTAuthentication]
     permission_classes = [DjangoModelPermissions]
+    
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = CategoryFilter
+
     serializer_class = CategorySerializer   
     queryset = Category.objects.all()  
 
-    @extend_schema(operation_id="get_all_categories")
+    @extend_schema(operation_id="get_all_categories", 
+        parameters=[
+            OpenApiParameter(name='name', description='Category Name', required=False, type=str),
+        ]
+    )
     def get(self, request, *args, **kwargs):
         """
         Handle GET requests for listing categories.
         """
         try:
-            categories = self.queryset.all()
+            categories = self.filter_queryset(self.queryset)
             serializer = self.serializer_class(categories, many=True)
             return self.success_response(data=serializer.data, message="Categories retrieved successfully.")
         except Exception as e:
