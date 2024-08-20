@@ -55,7 +55,7 @@ class TaskList(BaseAPIView):
     pagination_class = PageNumberPagination 
 
     serializer_class = TaskSerializer   
-    queryset = Task.objects.all()  
+    queryset = Task.objects.all().order_by('due_date')  
 
     @extend_schema(
             operation_id="get_all_tasks",
