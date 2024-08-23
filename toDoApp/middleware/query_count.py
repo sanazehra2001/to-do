@@ -1,6 +1,5 @@
 
 import time
-import logging
 from django.db import connection
 from django.utils.deprecation import MiddlewareMixin
 
