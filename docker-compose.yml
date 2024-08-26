@@ -11,9 +11,7 @@ services:
       - POSTGRES_PASSWORD=emumba
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
-    # volumes:
-    #   - .:/code
+    command: gunicorn todo.wsgi:application --workers=1 --threads=2 --timeout=90 --capture-output --reload
     ports:
       - "8000:8000"
     environment:
