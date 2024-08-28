@@ -12,7 +12,7 @@ def assign_employee_to_group(sender, instance, created, **kwargs):
         try: 
             with transaction.atomic():
                 if instance.role == CustomUser.Role.EMPLOYEE:
-                    group = Group.objects.get(name='Employees')
+                    group, created = Group.objects.get_or_create(name='Employees')
                 
                 instance.groups.add(group)
                 logging.info(f"User created: {instance.email}, Role: {instance.role}")
@@ -28,7 +28,7 @@ def assign_employer_to_group(sender, instance, created, **kwargs):
         try: 
             with transaction.atomic():
                 if instance.role == CustomUser.Role.EMPLOYER:
-                    group = Group.objects.get(name='Employers')
+                    group, created = Group.objects.get_or_create(name='Employers')
                 
                 instance.groups.add(group)
                 logging.info(f"User created: {instance.email}, Role: {instance.role}")

@@ -8,6 +8,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 
 from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
 
 from toDoApp.filters import CategoryFilter, TaskFilter
@@ -54,7 +55,7 @@ class TaskList(BaseAPIView):
     pagination_class = PageNumberPagination 
 
     serializer_class = TaskSerializer   
-    queryset = Task.objects.all()  
+    queryset = Task.objects.all().order_by('due_date')  
 
     @extend_schema(
             operation_id="get_all_tasks",
@@ -169,7 +170,7 @@ class CategoryList(BaseAPIView):
     serializer_class = CategorySerializer   
     queryset = Category.objects.all()  
 
-    @cache_page(60 * 15) 
+    @method_decorator(cache_page(60 * 15))
     @extend_schema(operation_id="get_all_categories", 
         parameters=[
             OpenApiParameter(name='name', description='Category Name', required=False, type=str),
