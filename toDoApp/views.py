@@ -1,6 +1,8 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -10,8 +12,10 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
+from yaml import serialize
 
 from toDoApp.filters import CategoryFilter, TaskFilter
+from toDoApp.serializers.google_serializer import GoogleLoginSerializer
 
 from .models import Task, Category
 from .serializers.category_serializer import CategorySerializer
@@ -206,6 +210,7 @@ class CategoryList(BaseAPIView):
 
 
 class CategoryDetail(BaseAPIView):
+
     """
     Retrieve, update or delete a category.
     """
@@ -277,3 +282,42 @@ class CategoryDetail(BaseAPIView):
             return self.bad_request_response(message="Category not found.", status_code=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to delete category.")
+        
+from rest_framework import serializers
+
+class GoogleSignInView(BaseAPIView):
+    serializer_class = GoogleLoginSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            # Use validated_data to avoid issues with serializer.data
+            validated_data = serializer.validated_data
+            tokens = validated_data.get('tokens')
+            id_token = validated_data.get('tokens').get('access')
+            refresh_token = validated_data.get('tokens').get('refresh')
+            
+            print("Validated data:", validated_data)
+            print("Extracted id_token:", id_token)
+            
+            return self.success_response(data=tokens, message="User successfully logged in using Google")
+        except serializers.ValidationError as e:
+            return self.bad_request_response(errors=str(e), message="Google authentication failed.")
+        except Exception as e:
+            import traceback
+            print("Exception:", traceback.format_exc())
+            return self.bad_request_response(errors=str(e), message="Google authentication failed.")
+
+
+    
+from django.shortcuts import render
+
+
+# For testing google signin
+
+def google_login_view(request):
+    return render(request, 'index.html')
+

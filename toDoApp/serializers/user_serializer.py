@@ -1,7 +1,7 @@
-# from rest_framework import serializers
-# from toDoApp.models import CustomUser
+from rest_framework import serializers
+from toDoApp.models import CustomUser
 
-# class CustomUserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = CustomUser
-#         fields = ('id', 'user_type', 'email', 'is_staff', 'is_active', 'date_joined', 'groups', 'user_permissions')
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'email', 'role', 'auth_provider', 'date_joined')

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Login</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body>
+    <div id="g_id_onload" data-client_id="944524570920-hil1276a3in5v10600j9r6qi1s7ds3v4.apps.googleusercontent.com"
+        data-callback="handleSignInWithGoogle">
+    </div>
+    <div id="g_id_signin"></div>
+
+    <script>
+        function handleSignInWithGoogle(response) {
+            console.log("Called");
+            console.log(response);
+
+            const idToken = response.credential;
+
+            fetch("/api/v1/google/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ id_token: idToken })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Success:", data);
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                });
+        }
+
+        window.onload = function () {
+            google.accounts.id.initialize({
+                client_id: "944524570920-hil1276a3in5v10600j9r6qi1s7ds3v4.apps.googleusercontent.com",
+                callback: handleSignInWithGoogle
+            });
+
+            google.accounts.id.renderButton(
+                document.getElementById('g_id_signin'),
+                { theme: 'outline', size: 'large' }
+            );
+        };
+    </script>
+</body>
+
+</html>
