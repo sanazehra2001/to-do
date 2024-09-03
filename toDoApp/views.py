@@ -1,7 +1,8 @@
 from rest_framework import status
+from rest_framework import serializers
 from rest_framework.response import Response
-from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
+from rest_framework.generics import GenericAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -282,7 +283,6 @@ class CategoryDetail(BaseAPIView):
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to delete category.")
         
-from rest_framework import serializers
 
 class GoogleSignInView(BaseAPIView):
     serializer_class = GoogleLoginSerializer
@@ -290,12 +290,15 @@ class GoogleSignInView(BaseAPIView):
 
     def post(self, request):
         try:
+            print("Request:")
             print(request.data)
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             
             validated_data = serializer.validated_data
             tokens = validated_data.get('tokens')
+            print("Tokens")
+            print(tokens)
             
             return self.success_response(data=tokens, message="User successfully logged in using Google")
         except serializers.ValidationError as e:
