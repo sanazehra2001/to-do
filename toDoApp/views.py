@@ -290,17 +290,12 @@ class GoogleSignInView(BaseAPIView):
 
     def post(self, request):
         try:
+            print(request.data)
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             
-            # Use validated_data to avoid issues with serializer.data
             validated_data = serializer.validated_data
             tokens = validated_data.get('tokens')
-            id_token = validated_data.get('tokens').get('access')
-            refresh_token = validated_data.get('tokens').get('refresh')
-            
-            print("Validated data:", validated_data)
-            print("Extracted id_token:", id_token)
             
             return self.success_response(data=tokens, message="User successfully logged in using Google")
         except serializers.ValidationError as e:
