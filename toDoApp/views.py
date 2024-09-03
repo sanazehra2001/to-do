@@ -1,18 +1,17 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 
+from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
-from yaml import serialize
 
 from toDoApp.filters import CategoryFilter, TaskFilter
 from toDoApp.serializers.google_serializer import GoogleLoginSerializer
@@ -310,11 +309,6 @@ class GoogleSignInView(BaseAPIView):
             import traceback
             print("Exception:", traceback.format_exc())
             return self.bad_request_response(errors=str(e), message="Google authentication failed.")
-
-
-    
-from django.shortcuts import render
-
 
 # For testing google signin
 
