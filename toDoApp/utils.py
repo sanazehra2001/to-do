@@ -51,8 +51,6 @@ def register_social_user(provider, email, role):
     # Serialize user data
     serializer = CustomUserSerializer(user)
 
-    print(serializer.data)
-
     return {
         'user': serializer.data,
         'tokens': tokens
