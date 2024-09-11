@@ -11,14 +11,13 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 
 from django.shortcuts import render
 from django.core.cache import cache
-from django.views.decorators.cache import cache_page
-from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
 
 from toDoApp.filters import CategoryFilter, TaskFilter
 from toDoApp.serializers.google_serializer import GoogleLoginSerializer
 
 from .models import Task, Category
+from toDoApp.kafka.producer import produce_message
 from .serializers.category_serializer import CategorySerializer
 from .serializers.task_serializer import TaskSerializer
 
@@ -89,7 +88,10 @@ class TaskList(BaseAPIView):
         try:
             serializer = TaskSerializer(data=request.data, context = {'request':request})
             if serializer.is_valid():
-                serializer.save(user=request.user)
+                task = serializer.save(user=request.user)
+
+                produce_message('task_topic', {'task_data': serializer.data})
+
                 return self.success_response(data=serializer.data, message="Task created successfully.")
             return self.bad_request_response(errors=serializer.errors, message="Failed to create task.")
         except Exception as e:
