@@ -6,17 +6,26 @@ services:
     volumes:
       - ./data/db:/var/lib/postgresql/data
     environment:
+      - USE_DOCKER=1
       - POSTGRES_NAME=todo
       - POSTGRES_USER=emumba
       - POSTGRES_PASSWORD=emumba
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
   web:
     build: .
-    command: gunicorn todo.wsgi:application --workers=1 --threads=2 --timeout=90 --capture-output --reload
+    command: gunicorn --config gunicorn_config.py todo.wsgi:application --workers=1 --threads=2 --timeout=90 --capture-output --reload
     ports:
       - "8000:8000"
     environment:
+      - USE_DOCKER=1
       - POSTGRES_NAME=todo
       - POSTGRES_USER=emumba
       - POSTGRES_PASSWORD=emumba
     depends_on:
       - db
+      - redis

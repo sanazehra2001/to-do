@@ -1,5 +1,7 @@
 from rest_framework import status
+from rest_framework import serializers
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from rest_framework.generics import GenericAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import DjangoModelPermissions
@@ -7,11 +9,14 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 
+from django.shortcuts import render
+from django.core.cache import cache
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
 
 from toDoApp.filters import CategoryFilter, TaskFilter
+from toDoApp.serializers.google_serializer import GoogleLoginSerializer
 
 from .models import Task, Category
 from .serializers.category_serializer import CategorySerializer
@@ -170,7 +175,10 @@ class CategoryList(BaseAPIView):
     serializer_class = CategorySerializer   
     queryset = Category.objects.all()  
 
-    @method_decorator(cache_page(60 * 15))
+
+    def get_cache_key(self):
+        return 'all_categories'
+
     @extend_schema(operation_id="get_all_categories", 
         parameters=[
             OpenApiParameter(name='name', description='Category Name', required=False, type=str),
@@ -181,11 +189,22 @@ class CategoryList(BaseAPIView):
         """
         Handle GET requests for listing categories.
         """
+        cache_key = self.get_cache_key()
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            return self.success_response(data=cached_data, message="Categories retrieved successfully.")
+
         try:
             categories = self.filter_queryset(self.queryset)
             page_categories = self.paginate_queryset(categories)
             serializer = self.serializer_class(page_categories, many=True)
-            return self.success_response(data=self.get_paginated_response(serializer.data).data, message="Categories retrieved successfully.")
+
+            data = self.get_paginated_response(serializer.data).data
+            cache.set(cache_key, data, 60 * 15)
+
+            return self.success_response(data=data, message="Categories retrieved successfully.")
+        
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to retrieve categories.")
 
@@ -198,6 +217,7 @@ class CategoryList(BaseAPIView):
             serializer = self.serializer_class(data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                cache.delete(self.get_cache_key())
                 return self.success_response(data=serializer.data, message="Category created successfully.")
             return self.bad_request_response(errors=serializer.errors, message="Failed to create category.")
         except Exception as e:
@@ -206,6 +226,7 @@ class CategoryList(BaseAPIView):
 
 
 class CategoryDetail(BaseAPIView):
+
     """
     Retrieve, update or delete a category.
     """
@@ -277,3 +298,34 @@ class CategoryDetail(BaseAPIView):
             return self.bad_request_response(message="Category not found.", status_code=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return self.bad_request_response(errors=str(e), message="Failed to delete category.")
+        
+
+class GoogleSignInView(BaseAPIView):
+    serializer_class = GoogleLoginSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        try:
+            print("Request:")
+            print(request.data)
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            validated_data = serializer.validated_data
+            tokens = validated_data.get('tokens')
+            print("Tokens")
+            print(tokens)
+            
+            return self.success_response(data=tokens, message="User successfully logged in using Google")
+        except serializers.ValidationError as e:
+            return self.bad_request_response(errors=str(e), message="Google authentication failed.")
+        except Exception as e:
+            import traceback
+            print("Exception:", traceback.format_exc())
+            return self.bad_request_response(errors=str(e), message="Google authentication failed.")
+
+# For testing google signin
+
+def google_login_view(request):
+    return render(request, 'index.html')
+
