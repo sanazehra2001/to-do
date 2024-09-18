@@ -11,10 +11,16 @@ services:
       - POSTGRES_USER=emumba
       - POSTGRES_PASSWORD=emumba
 
+    networks:
+      - kafka_network
+
   redis:
     image: redis:latest
     ports:
       - "6379:6379"
+
+    networks:
+      - kafka_network
 
   kafka:
     image: wurstmeister/kafka:latest
@@ -29,10 +35,16 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
 
+    networks:
+      - kafka_network
+
   zookeeper:
     image: wurstmeister/zookeeper:latest
     ports:
       - "2181:2181"
+
+    networks:
+      - kafka_network
 
   web:
     build: .
@@ -48,3 +60,11 @@ services:
       - db
       - redis
       - kafka
+
+    networks:
+      - kafka_network
+
+networks:
+  kafka_network:
+    external:
+      name: kafka_network
