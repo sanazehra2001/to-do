@@ -90,7 +90,7 @@ class TaskList(BaseAPIView):
             if serializer.is_valid():
                 task = serializer.save(user=request.user)
 
-                produce_message('task_topic', {'task_data': serializer.data})
+                produce_message('task_topic', {'task_data': serializer.data, 'user_data': request.user})
 
                 return self.success_response(data=serializer.data, message="Task created successfully.")
             return self.bad_request_response(errors=serializer.errors, message="Failed to create task.")
