@@ -1,5 +1,5 @@
 from rest_framework import status
-from .base_test import BaseTestCase
+from toDoApp.tests.base_test import BaseTestCase
 from django.apps import apps
 from django.contrib.auth import get_user_model
 
