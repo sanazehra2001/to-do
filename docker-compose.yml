@@ -59,6 +59,7 @@ services:
       - POSTGRES_USER=emumba
       - POSTGRES_PASSWORD=emumba
       - TZ=Asia/Karachi
+      - KAFKA_BOOTSTRAP_SERVER=kafka:9093
     depends_on:
       - db
       - redis
