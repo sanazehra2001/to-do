@@ -9,6 +9,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 
+import logging
+
 from django.shortcuts import render
 from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
@@ -21,6 +23,7 @@ from toDoApp.kafka.producer import produce_message
 from .serializers.category_serializer import CategorySerializer
 from .serializers.task_serializer import TaskSerializer
 
+logger = logging.getLogger('toDoApp')
 
 
 class BaseAPIView(GenericAPIView):
@@ -308,22 +311,20 @@ class GoogleSignInView(BaseAPIView):
 
     def post(self, request):
         try:
-            print("Request:")
-            print(request.data)
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             
             validated_data = serializer.validated_data
             tokens = validated_data.get('tokens')
-            print("Tokens")
-            print(tokens)
+            logger.debug("Tokens")
+            logger.debug(tokens)
             
             return self.success_response(data=tokens, message="User successfully logged in using Google")
         except serializers.ValidationError as e:
             return self.bad_request_response(errors=str(e), message="Google authentication failed.")
         except Exception as e:
             import traceback
-            print("Exception:", traceback.format_exc())
+            logger.exception("Exception:", traceback.format_exc())
             return self.bad_request_response(errors=str(e), message="Google authentication failed.")
 
 # For testing google signin
