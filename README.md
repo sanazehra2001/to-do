@@ -4,7 +4,6 @@ TodoApp is a simple task management application designed to demonstrate basic fe
 ## Features
 ### Employer
 - Create tasks in different categories.
-- Assign tasks to employees.
 - Track task progress.
 
 ### Employee
