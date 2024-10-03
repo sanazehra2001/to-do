@@ -10,6 +10,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 
 import logging
+from kafka.errors import NoBrokersAvailable
 
 from django.shortcuts import render
 from django.core.cache import cache
@@ -95,7 +96,10 @@ class TaskList(BaseAPIView):
             if serializer.is_valid():
                 task = serializer.save(user=request.user)
 
-                produce_message('task_topic', {'task_data': serializer.data, 'user_data': request.user})
+                try:
+                    produce_message('task_topic', {'task_data': serializer.data, 'user_data': request.user})
+                except NoBrokersAvailable:
+                    logger.warning("Kafka brokers not available. Proceeding without message production.")
 
                 return self.success_response(data=serializer.data, message="Task created successfully.")
             return self.bad_request_response(errors=serializer.errors, message="Failed to create task.")

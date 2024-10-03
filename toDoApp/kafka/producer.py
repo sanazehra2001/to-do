@@ -17,3 +17,5 @@ def produce_message(topic, message):
     logger.debug("Message sent")
     producer.flush()
 
+
+
