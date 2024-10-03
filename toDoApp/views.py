@@ -15,6 +15,8 @@ from django.shortcuts import render
 from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
 
+from redis.exceptions import ConnectionError
+
 from toDoApp.filters import CategoryFilter, TaskFilter
 from toDoApp.serializers.google_serializer import GoogleLoginSerializer
 
@@ -194,8 +196,12 @@ class CategoryList(BaseAPIView):
         """
         Handle GET requests for listing categories.
         """
-        cache_key = self.get_cache_key()
-        cached_data = cache.get(cache_key)
+
+        try:
+            cache_key = self.get_cache_key()
+            cached_data = cache.get(cache_key)
+        except :
+            cached_data = None
 
         if cached_data:
             return self.success_response(data=cached_data, message="Categories retrieved successfully.")
@@ -206,7 +212,11 @@ class CategoryList(BaseAPIView):
             serializer = self.serializer_class(page_categories, many=True)
 
             data = self.get_paginated_response(serializer.data).data
-            cache.set(cache_key, data, 60 * 15)
+
+            try: 
+                cache.set(cache_key, data, 60 * 15)
+            except ConnectionError:
+                logger.warning("Cache not found.")
 
             return self.success_response(data=data, message="Categories retrieved successfully.")
         
@@ -222,7 +232,12 @@ class CategoryList(BaseAPIView):
             serializer = self.serializer_class(data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                cache.delete(self.get_cache_key())
+
+                try: 
+                    cache.delete(self.get_cache_key())
+                except ConnectionError:
+                    logger.warning("Cache not found.")
+
                 return self.success_response(data=serializer.data, message="Category created successfully.")
             return self.bad_request_response(errors=serializer.errors, message="Failed to create category.")
         except Exception as e:

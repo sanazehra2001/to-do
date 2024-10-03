@@ -4,9 +4,12 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
 from django.contrib.auth.models import Group, Permission
 
+from redis.exceptions import ConnectionError
+
 import logging
 
 from toDoApp.models import CustomUser, Employee, Employer, Category
+
 
 
 @receiver(post_save, sender=Employee)
@@ -61,8 +64,11 @@ def clear_category_cache(sender, instance, **kwargs):
     """
     Invalidate the cache when a Category instance is saved.
     """
-    cache_key = 'all_categories'
-    cache.delete(cache_key)
+    try: 
+        cache_key = 'all_categories'
+        cache.delete(cache_key)
+    except ConnectionError:
+        logging.warning("Cache not available")
 
 
 def add_permissions_to_group(group, permissions):
