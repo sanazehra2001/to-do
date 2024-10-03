@@ -17,12 +17,6 @@ Employer = apps.get_model('toDoApp', 'Employer')
 Employee = apps.get_model('toDoApp', 'Employee')
 
 
-logger = logging.getLogger('toDoApp')
-
-class MockKafkaProducer:
-    def produce_message(self, topic, message):
-        logger.debug("Simulating Kafa message production")
-
 class TaskModelTest(BaseTestCase):
 
     def setUp(self):
@@ -36,9 +30,12 @@ class TaskModelTest(BaseTestCase):
             user = self.employer
             )
 
-    @patch('toDoApp.kafka.producer.produce_message', new_callable=lambda: MockKafkaProducer)
-    def test_employer_can_create_task(self, mock_produce_message):
-        mock_produce_message.return_value = None
+    @patch('toDoApp.kafka.producer.produce_message')
+    def test_employer_can_create_task(self, mock_kafka_producer):
+        
+        mock_producer_instance = mock_kafka_producer()   
+        mock_producer_instance.produce_message.return_value = None
+   
 
         self.client.force_authenticate(user=self.employer)
 
@@ -53,6 +50,12 @@ class TaskModelTest(BaseTestCase):
         # Check the response status and data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['data']['title'], 'Task 2')
+
+        # Call the produce_message method to ensure logging is triggered
+        mock_producer_instance.produce_message('task_created', {'title': 'Task 2'})
+
+        # Assert that the produce_message method was called
+        mock_producer_instance.produce_message.assert_called_once_with('task_created', {'title': 'Task 2'})
 
         self.client.logout()
 
