@@ -10,3 +10,16 @@ TodoApp is a simple task management application designed to demonstrate basic fe
 - View tasks assigned to them.
 - Update task status (e.g., completed, in progress).
 - Manage their task list.
+
+## Getting Started
+### - Clone the Repository
+git clone https://github.com/sanazehra2001/to-do
+### - Build the Docker Image
+cd todo
+docker-compose build
+### - Run the Container
+docker-compose up
+
+
+
+
