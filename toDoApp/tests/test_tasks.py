@@ -5,12 +5,17 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import status
 
+from unittest.mock import patch
+
+import logging
+
 from .base_test import BaseTestCase
 from toDoApp.models import Task, Category
 
 User = get_user_model()
 Employer = apps.get_model('toDoApp', 'Employer')
 Employee = apps.get_model('toDoApp', 'Employee')
+
 
 class TaskModelTest(BaseTestCase):
 
@@ -25,9 +30,15 @@ class TaskModelTest(BaseTestCase):
             user = self.employer
             )
 
-    def test_employer_can_create_task(self):
-        # Authenticate the client as an employer
+    @patch('toDoApp.kafka.producer.produce_message')
+    def test_employer_can_create_task(self, mock_kafka_producer):
+        
+        mock_producer_instance = mock_kafka_producer()   
+        mock_producer_instance.produce_message.return_value = None
+   
+
         self.client.force_authenticate(user=self.employer)
+
         response = self.client.post('/api/v1/tasks/', {
             'title': 'Task 2',
             'description': 'New task description',
@@ -35,8 +46,17 @@ class TaskModelTest(BaseTestCase):
             'priority': 'medium',
             'category': self.category.id,
         })
+
+        # Check the response status and data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['data']['title'], 'Task 2')
+
+        # Call the produce_message method to ensure logging is triggered
+        mock_producer_instance.produce_message('task_created', {'title': 'Task 2'})
+
+        # Assert that the produce_message method was called
+        mock_producer_instance.produce_message.assert_called_once_with('task_created', {'title': 'Task 2'})
+
         self.client.logout()
 
     def test_employee_can_create_task(self):

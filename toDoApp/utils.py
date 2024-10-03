@@ -7,9 +7,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import AuthenticationFailed
+import logging
 
 from .serializers.user_serializer import CustomUserSerializer
 
+logger = logging.getLogger('toDoApp')
 
 class Google():
     @staticmethod
@@ -21,7 +23,7 @@ class Google():
                 return id_info
 
         except Exception as e:
-            print("Error during token validation:", str(e))
+            logger.exception("Error during token validation:", str(e))
             raise AuthenticationFailed('Token is either invalid or has expired.')
         
 
